@@ -1,0 +1,88 @@
+var dms_customization_time;
+var dms_customization_id;
+(function ($) {
+	Drupal.behaviors.dms_customizations = {
+		attach: function(context) {
+		  $('#edit-field-datafile-url-und-0-url', context)
+		  .bind('blur', function() {
+			  if(this.value != '') {
+				  var urlRegex = /(f|ht)tps?:\/\//g;
+				  if(!urlRegex.test(this.value) && this.value != '') {
+					  this.value = 'http://' + this.value;
+				  } 
+				  
+				  $(this).parent().append('<div class="url_loading_content"><div class="url_loading"></div></div>');
+				  
+				  dms_customization_id = $(this).attr('id');
+				  
+				  clearTimeout(dms_customization_time);
+				  
+				  dms_customization_time = setTimeout(function(){dms_cust_remove_loading(dms_customization_id);},10000);
+				  
+				  $.getJSON(Drupal.settings.basePath + 'dms/accessurl/detail?url=' + escape(this.value) + '&op=addhttp&id=edit-field-datafile-url-und-0-url', 
+					  null, 
+					  function(data){
+				  		
+				  		if(data.status) {
+				  			$.getJSON(Drupal.settings.basePath+'dms/accesspoint/detail?url=' + escape(data.url), null, populateFileDetail);
+				  		} else {
+				  			var data = {};
+				  			data.status = false;
+				  			data.id 	= 'edit-field-datafile-url-und-0-url';
+				  			
+				  			dmsLinkAddHTTP(data);
+				  		}
+				  });		
+				  
+			  }
+		    return false;
+		  });
+$("#edit-field-sector-und-hierarchical-select-selects-0 option[value='none']").remove();
+		}
+	}
+})(jQuery);
+
+var dmsLinkAddHTTP = function(data) {
+	if(typeof data.id != 'undefined') {
+		if(typeof jQuery('#' + data.id).parent().find('.url_loading') != 'undefined' ) {
+			jQuery('#' + data.id).parent().find('.url_loading_content').remove();
+		}
+		
+		jQuery('#' + data.id).removeClass('dms_link_tick');
+		jQuery('#' + data.id).removeClass('dms_link_cancel');
+		
+		if(typeof data.status != 'undefined' && data.status) {
+			jQuery('#' + data.id).addClass('dms_link_tick');
+		} else {
+			jQuery('#' + data.id).addClass('dms_link_cancel');
+		}
+	}
+}
+
+/*
+ * This function will populate the Access Point Url Detail to the coresp[omding fields
+ */
+var populateFileDetail = function(result) {
+  /* var result = Drupal.parseJson(response); */
+	var data = {};
+	data.status = result.status;
+	data.id 	= 'edit-field-datafile-url-und-0-url';
+	
+	dmsLinkAddHTTP(data);
+		
+  if(typeof result.status != 'undefined' && result.status) {
+	   if(typeof jQuery('#edit-field-file-size-und-0-value') != 'undefined' && typeof result.data.size != 'undefined')
+		   jQuery('#edit-field-file-size-und-0-value').val(result.data.size);
+	   
+	   if(typeof jQuery('#edit-field-file-format-und') != 'undefined' && typeof result.data.file_type_tid != 'undefined')
+		   jQuery('#edit-field-file-format-und').val(result.data.file_type_tid);
+  } else {
+	
+  }
+}
+
+function dms_cust_remove_loading(id) {
+	if(typeof jQuery('#' + id).parent().find('.url_loading') != 'undefined' ) {
+		//jQuery('#' + id).parent().find('.url_loading_content').remove();
+	}
+}

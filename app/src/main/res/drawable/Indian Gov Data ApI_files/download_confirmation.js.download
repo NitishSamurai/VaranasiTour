@@ -1,0 +1,310 @@
+(function ($) {
+	Drupal.behaviors.download_confirmation = {
+		attach: function(context) {
+	        $('.download-confirmation-box', context).children().not('.ogpl-processed')
+			.addClass('ogpl-processed')
+		    .bind('click', function() {
+			  $("#confirmation_popup").remove();
+			  var nid = $(this).children().attr('class').split(' ')[0];
+			  var dest = window.location.pathname;
+			  ShowPop(nid,dest,'notexport','all');
+			  return false; 
+		    }); 
+		    $('.views-field-dms-allowed-operations', context).children().find('li').not('.ogpl-processed')
+			.addClass('ogpl-processed').bind('click', function() {
+			  $("#confirmation_popup").remove();
+			  var exp = $(this).attr('id').split('-')[0];
+			  var nid = $(this).attr('id').split('-')[1];
+			  var dest = window.location.pathname;
+			  ShowPop(nid,dest,'export',exp);
+			  return false; 
+		  });
+		  
+		   $('.api_resource_download', context).children().not('.ogpl-processed')
+			.addClass('ogpl-processed')
+		    .bind('click', function() {
+			  $("#confirmation_popup").remove();
+			  var nid = $(this).children().attr('class').split('-')[1];
+			  var dest = window.location.pathname;
+			  ShowPop(nid,dest,'notexport','all');
+			  return false; 
+		    }); 
+		  
+          $(document).keyup(function(e) { 
+           if (e.keyCode == 27) {
+            $('#confirmation_popup').remove();
+           }
+         });
+		 
+		}
+	}
+		
+function ShowPop(elem,dest,type,exp) {
+    $.get(Drupal.settings.basePath + 'resource_download_con/popup/'+elem+'/'+exp+'?destination='+dest,{path:"none"},function(check) {
+    var arrayPageSize = getPageInformations();
+    var arrayPageScroll = getPageScrollInformations();
+    var messageboxTop = arrayPageScroll[1] + (arrayPageSize[5] / 10) * 1;
+    var messagesboxLeft = arrayPageScroll[0];
+	$("#confirmation_popup").remove();
+	if (type == 'export'){
+	  $(".confirmationpopup-"+elem).append(check);
+      $(".confirmationpopup-"+elem).css({
+      'top': messageboxTop + 'px',
+      'left': messagesboxLeft + 'px'
+      }).show();
+	} else {
+      $(".confirmation-popup-"+elem).append(check);
+      $(".confirmation-popup-"+elem).css({
+      'top': messageboxTop + 'px',
+      'left': messagesboxLeft + 'px'
+      }).show();
+	}
+      return false;
+    },'html');
+}
+
+function getPageInformations() {
+
+    var xScroll, yScroll;
+
+    if (document.body.scrollHeight > document.body.offsetHeight) { // all but Explorer Mac
+      xScroll = document.body.scrollWidth;
+      yScroll = document.body.scrollHeight;
+    }
+    else if (window.innerHeight && window.scrollMaxY) {
+      xScroll = window.innerWidth + window.scrollMaxX;
+      yScroll = window.innerHeight + window.scrollMaxY;
+    }
+    // Explorer Mac...would also work in Explorer 6 Strict, Mozilla and Safari.
+    else {
+      xScroll = document.body.offsetWidth;
+      yScroll = document.body.offsetHeight;
+    }
+
+    var windowWidth, windowHeight;
+
+    if (self.innerHeight) { // All except Explorer.
+      if (document.documentElement.clientWidth) {
+        windowWidth = document.documentElement.clientWidth;
+      }
+      else {
+        windowWidth = self.innerWidth;
+      }
+      windowHeight = self.innerHeight;
+    }
+    // Explorer 6 Strict Mode.
+    else if (document.documentElement && document.documentElement.clientHeight) {
+      windowWidth = document.documentElement.clientWidth;
+      windowHeight = document.documentElement.clientHeight;
+    }
+    else if (document.body) { // Other Explorers.
+      windowWidth = document.body.clientWidth;
+      windowHeight = document.body.clientHeight;
+    }
+
+
+    // For small pages with total height less then height of the viewport.
+    if (yScroll < windowHeight) {
+      pageHeight = windowHeight;
+    }
+    else {
+      pageHeight = yScroll;
+    }
+
+
+    // For small pages with total width less then width of the viewport.
+    if (xScroll < windowWidth) {
+      pageWidth = windowWidth;
+    }
+    else {
+      pageWidth = xScroll;
+    }
+
+    arrayPageSize = [pageWidth, pageHeight, windowWidth, windowHeight];
+    return arrayPageSize;
+  }
+  function getPageScrollInformations() {
+
+    var xScroll, yScroll;
+
+    if (self.pageYOffset) {
+      yScroll = self.pageYOffset;
+      xScroll = self.pageXOffset;
+    }
+    else if (document.documentElement && document.documentElement.scrollTop) {  // Explorer 6 Strict.
+      yScroll = document.documentElement.scrollTop;
+      xScroll = document.documentElement.scrollLeft;
+    }
+    else if (document.body) {// All other Explorers.
+      yScroll = document.body.scrollTop;
+      xScroll = document.body.scrollLeft;
+    }
+
+    arrayPageScroll = [xScroll,yScroll];
+    return arrayPageScroll;
+  }
+})(jQuery);
+
+function ClosePopup(elem) {   
+  jQuery(elem).parent().remove();
+}
+
+function downloadconfirmation_resourcesform_submit(elem) {
+	var post_path = Drupal.settings.downloadconfirmationsave.getpath;
+	;
+	var id = jQuery(elem).parent().find('#edit-node-id').val();
+	var f_format = jQuery(elem).parent().find('#edit-file-for-mat').val();
+	var basePath;
+	if (f_format == 'all') {
+		basePath = Drupal.settings.basePath + 'node/' + id + '/download';
+	} else {
+		basePath = Drupal.settings.basePath + 'node/' + id
+				+ '/datastore/export/' + f_format;
+	}
+	var reasons = [];
+	var download_reasons = [];
+	var options = "<ul>";
+	jQuery(elem).parent().find('#edit-download-reasons :input').each(
+			function() {
+				if (jQuery(this).prop("checked") == true) {
+					download_reasons.push(jQuery(this).val());
+				}
+			});
+
+	jQuery(elem).parent().find('#edit-reasons-d :input').each(function() {
+		if (jQuery(this).prop("checked") == true) {
+			reasons.push(jQuery(this).val());
+		}
+	});
+	if (download_reasons.length < 1) {
+		options += '<li>You have to select one option Commercial/Non-commercial.</li>';
+	}
+	if (reasons.length < 1) {
+		options += '<li>You should select at least one option Academia/R&D/Business/Journalistic/Govt Use/Other.</li>';
+	}
+	if (reasons.length >= 1
+			&& jQuery(elem).closest('form').find('#edit-reasons-d-other').prop(
+					"checked") == true) {
+		if ((jQuery(elem).closest('form').find('input[name=reasons_d_other]')
+				.val().length == 0)) {
+			options += '<li>You should type some text in other box.</li>';
+			jQuery('#edit-reasons-d-other--2').addClass('border_red');
+		} else if (!ValidateText(jQuery(elem).parent().children().find(
+				'input[name=reasons_d_other]').val())) {
+			options += '<li>Text in the other text box should be valid.</li>';
+			jQuery('#edit-reasons-d-other--2').addClass('border_red');
+		}
+	}
+	if ((jQuery(elem).parent().children().find('#edit-mail-d').val().length >= 1)
+			&& (!ValidateEmail(jQuery(elem).parent().children().find(
+					'#edit-mail-d').val()))) {
+		options += '<li>Invalid email address.</li>';
+		jQuery('#edit-mail-d').addClass('border_red');
+	}
+	if ((jQuery(elem).parent().children().find('#edit-name-d').val().length >= 1)
+			&& (!ValidateText(jQuery(elem).parent().children().find(
+					'#edit-name-d').val()))) {
+		options += '<li>Name should be valid.</li>';
+		jQuery('#edit-name-d').addClass('border_red');
+	}
+	options += "</ul>";
+	if (options.length > 9) {
+		jQuery(".popup_errors_wrapper").remove();
+		jQuery(".download_confirmation_title").find('p').append(
+				'<div class="popup_errors_wrapper"><div class="popup_errors">'
+						+ options + '</div></div>');
+		// setTimeout(function(){ jQuery('.download_confirmation_title
+		// .popup_errors').fadeOut() }, 5000);
+		return false;
+	} else {
+		// jQuery("#download-confirmation-resources-form").submit();
+		// window.open(basePath, '_blank');
+		// jQuery(".confirmation-pop-"+id).remove();
+
+		var formJqObj = jQuery("#download-confirmation-resources-form");
+		var formDataObj = {};
+		var formDataObj1 = {};
+		var formDataObj2 = {};
+		(function() {
+			formJqObj.find("input:radio").each(function() {
+				var thisInput_ = jQuery(this);
+				if (thisInput_.prop("checked")) {
+					formDataObj[thisInput_.attr("name")] = thisInput_.val();
+				}
+			});
+			formJqObj.find("input:checkbox").each(function() {
+				var thisInput_ = jQuery(this);
+				if (thisInput_.prop("checked")) {
+					formDataObj1[thisInput_.attr("name")] = thisInput_.val();
+				}
+			});
+			formJqObj.find(":input").not("[type='submit']").not(
+					"[type='reset']").not("input:checkbox").not("input:radio")
+					.each(function() {
+						var thisInput = jQuery(this);
+						formDataObj2[thisInput.attr("name")] = thisInput.val();
+					});
+		})();
+		jQuery.ajax({
+			type : "POST",
+			url : post_path,
+			data : {
+				reasons : JSON.stringify(formDataObj),
+				reasons1 : JSON.stringify(formDataObj1),
+				reasons2 : JSON.stringify(formDataObj2)
+			},
+			success : function(response) {
+			}
+		}).done(function(data, textStatus, jqXHR) {
+			console.log("Ajax completed: " + data);
+			
+			var popup  = window.open(basePath, '_blank');
+			if(typeof popup == 'undefined' || popup == null) {
+				var link_html = `<div class="form-item">
+						As Popup is blocked on your browser. 
+						Please click on the "Download Link" below  
+						OR allow the blocked popup to download the resource.
+					</div>
+					<div class="view-resource-detail-popup"> 
+					 	<span class="download-counts" style="background-color: unset;">
+							<a id="ogdp-download-link-${id}"
+								class="" title="click here to download resource"
+								href="${basePath}" target="_new" onclick="jQuery('.confirmation-pop-${id}').remove();">Download Link</a> 
+						</span>
+					</div>`;
+				
+				jQuery('.confirmation-pop-'+id+' p')[0].innerHTML = `Thank you for your input`;
+				
+				jQuery('.confirmation-pop-'+id+' form')[0].innerHTML = link_html;
+			} else {
+				jQuery(".confirmation-pop-" + id).remove();
+			}
+			
+		}).fail(function(jqXHR, textStatus, errorThrown) {
+			console.log("Ajax problem: " + textStatus + ". " + errorThrown);
+		});
+	}
+}
+
+function ValidateEmail(email) {
+        var expr = /^([\w-\.]+)@((\[[0-9]{1,5}\.[0-9]{1,5}\.[0-9]{1,5}\.)|(([\w-]+\.)+))([a-zA-Z]{2,5}|[0-9]{1,5})(\]?)$/;
+        return expr.test(email);
+ }
+function ValidateText(txt) {
+  var expr = /^[a-zA-Z\s]+$/;
+  return expr.test(txt);
+}
+function ToggleOtherTextField(elem){
+	jQuery(elem).toggleClass('checkbox-checked');
+    if (jQuery(elem).attr('name') == 'reasons_d[Other]'){
+		jQuery(elem).closest('form').find('#edit-reasons-d-other--2').val('');
+	    jQuery(elem).closest('form').find('#edit-reasons-d-other--2').toggleClass('field-hide');  
+		jQuery(elem).closest('form').find('#edit-reasons-d-other--2').addClass('border_red');
+    }	
+}
+function Inputblur(elem){
+	if (jQuery(elem).hasClass( "border_red" ) ) {
+		jQuery(elem).val('');
+	    jQuery(elem).removeClass('border_red');
+	}
+}

@@ -1,0 +1,181 @@
+(function ($) {
+	Drupal.behaviors.ogpl_apis = { 
+		attach: function(context) {
+        $("#edit-sector-anony option[value='All']").text('Multi Sectoral');
+	}
+	}
+})(jQuery);
+
+function ChangeOrg_sectors(elem,anony){
+    var path = Drupal.settings.basePath+'ogpl_sectors';
+	var option;
+	var _option = jQuery(elem).val();
+	if ( _option == 'Central & State Only' ) {
+		option = 'Select';
+	} else {
+		option = jQuery(elem).val();
+	}
+		jQuery.ajax({
+			url: path,
+			type: "post",
+			data: {option:option},
+			success: function(d) {
+			    var obj = JSON.parse(d);
+				jQuery("#search_ogplapi-form #edit-sector"+anony+" option").remove();
+				jQuery("#search_ogplapi-form #edit-sector"+anony).append('<option value="Select">Select Sector</option>');
+				for (var x in obj){
+				   jQuery("#search_ogplapi-form #edit-sector"+anony).append('<option value="'+ x +'">'+ obj[x] +'</option>');
+				}
+				jQuery("#edit-sector-anony option[value='All']").text('Multi Sectoral');
+			}
+		});	 
+}
+function ChangeOrg_orgs(elem, level, anony){
+    var path = Drupal.settings.basePath+'ogpl_orgs';
+	jQuery("#search_ogplapi-form .ministry_department_user_type").css("display", "none");
+	//jQuery("#search_ogplapi-form #edit-organization-level2"+anony+" option,#search_ogplapi-form #edit-organization-level1"+anony+" option, #search_ogplapi-form #edit-organization"+anony+" option").remove();
+	//jQuery(".form-item-organization-level0"+anony+",.organization_level0,.organization_level1,.organization_level2,.form-item-organization-level1"+anony+",.form-item-organization-level2"+anony).css("display", "none");
+	if (jQuery(elem).val() == 'User') {
+		jQuery("#search_ogplapi-form .ministry_department_user_type").css("display", "block");
+	}
+	else{
+		var option;
+		var option1;
+		var option2= 'Select';
+		var option3;
+		var option4;
+		var ministry='';
+		if (level == 0) {
+		  option = jQuery(elem).val();
+		  jQuery("#search_ogplapi-form #edit-organization-level2"+anony+" option,#search_ogplapi-form #edit-organization-level1"+anony+" option, #search_ogplapi-form #edit-organization"+anony+" option").remove();
+		  jQuery(".form-item-organization-level1"+anony+",.form-item-organization-level2"+anony).css("display", "none");
+		  if (option == 'Central'){
+		     option1 = 'Select Ministry';
+			 jQuery("#search_ogplapi-form #edit-organization"+anony).css("display", "block");
+		  }else if (option == 'State'){
+		     option1 = 'Select State';
+			 jQuery("#search_ogplapi-form #edit-organization"+anony).css("display", "block");
+		  } else {
+		     jQuery("#search_ogplapi-form #edit-organization"+anony).css("display", "none");
+		  }
+		} else {
+		    option3 = 'Select Department';
+			option4 = 'Select Organisation';
+			jQuery(".form-item-organization-level1"+anony+",.form-item-organization-level2"+anony).css("display", "block");
+		    if (level == 1) {
+		     jQuery("#search_ogplapi-form #edit-organization-level1"+anony+" option,#search_ogplapi-form #edit-organization-level2"+anony+" option").remove();
+			 jQuery(".organization_level1,.organization_level2").css("display", "none");
+			 jQuery(".form-item-organization-level1"+anony+",.form-item-organization-level2"+anony).css("display", "none");
+		   } else if (level == 2) {
+			 jQuery(".organization_level2").css("display", "none");
+			 jQuery("#search_ogplapi-form #edit-organization-level2"+anony+" option").remove();
+		   }
+		   option = jQuery("#search_ogplapi-form #edit-organi-type"+anony).val();
+		   ministry = jQuery(elem).val();
+		}
+		jQuery.ajax({
+			url: path,
+			type: "post",
+			data: {option:option,ministry:ministry,level:level},
+			success: function(d) {
+			    if (level == 0) {
+				   jQuery("#search_ogplapi-form #edit-organization"+anony).append('<option value="'+option2+'">'+option1+'</option>');
+				} else if (level == 1) {
+				    jQuery("#search_ogplapi-form #edit-organization-level1"+anony).append('<option value="'+option2+'">'+ option3 +'</option>');
+				}else if (level == 2) {
+				   jQuery("#search_ogplapi-form #edit-organization-level2"+anony).append('<option value="'+option2+'">'+ option4 +'</option>');
+				}
+			    var obj = JSON.parse(d);
+				for (var x in obj){
+					if (level == 0){
+						if(obj[x].parent == 0) {
+						   jQuery(".organization_level0").css("display", "block");
+						   jQuery("#search_ogplapi-form #edit-organization"+anony).append('<option value="'+ obj[x].name +'">'+ obj[x].name +'</option>');
+						}  
+					}
+					if (level == 1){
+						if(obj[x].parent == ministry) {
+						  if(obj[x].name.length >= 1);
+						     jQuery(".organization_level1").css("display", "block");
+							 jQuery(".form-item-organization-level1"+anony).css("display", "block");
+							 jQuery("#search_ogplapi-form #edit-organization-level1"+anony).append('<option value="'+ obj[x].name +'">'+ obj[x].name +'</option>');
+						  } 
+					} 
+					if (level == 2){
+						if(obj[x].parent == ministry) {
+							if(obj[x].name.length >= 1){
+								jQuery(".organization_level2").css("display", "block");
+								jQuery(".form-item-organization-level2"+anony).css("display", "block");
+							    jQuery("#search_ogplapi-form #edit-organization-level2"+anony).append('<option value="'+ obj[x].name +'">'+ obj[x].name +'</option>');
+							} 
+						} 
+					}
+				}
+			}
+		});	  
+	}
+}
+function ChangeOrg_getorgs(elem,anony){
+    var path = Drupal.settings.basePath+'ogpl_sectors';
+	var org = jQuery(elem).val();
+	var option = jQuery("#search_ogplapi-form #edit-organi-type"+anony).val();
+	var flow = 1;
+	if (jQuery(elem).attr('id') == 'edit-organization'+anony) {
+	  org = jQuery(elem).val();
+	} else {
+	  if (jQuery("#edit-organization-level1"+anony+" option:selected").val() != 'Select' || jQuery("#edit-organization-level2"+anony+" option:selected").val() != 'Select') {
+	    org = jQuery(elem).val();
+	  } else {
+		if (jQuery("#edit-organization-level1"+anony+" option:selected").val() == 'Select') {
+		  org = jQuery("#edit-organization"+anony+" option:selected").val();
+		} else if (jQuery("#edit-organization-level2"+anony+" option:selected").val() == 'Select') {
+		  org = jQuery("#edit-organization-level1"+anony+" option:selected").val();
+		}
+	  }
+	}
+	jQuery.ajax({
+		url: path,
+		type: "post",
+		data: {option:option,org:org},
+		success: function(d) {
+		    var obj = JSON.parse(d);
+			jQuery("#search_ogplapi-form #edit-sector"+anony+" option").remove();
+			jQuery("#search_ogplapi-form #edit-sector"+anony).append('<option value="Select">Select Sector</option>');
+			for (var x in obj){
+			   jQuery("#search_ogplapi-form #edit-sector"+anony).append('<option value="'+ x +'">'+ obj[x] +'</option>');
+			}
+			jQuery("#edit-sector-anony option[value='All']").text('Multi Sectoral');
+		}
+	});	   
+}
+
+function Update_resources_status(elm, val) {
+	var visualizable = 0;
+	if (jQuery(elm).parent().find('.edit-visualizable').is(':checked')) {
+	  visualizable = 1;
+	}
+	page_loading(elm, 0);
+	var path = Drupal.settings.basePath+'update_resource_Apis';
+	var index = jQuery(elm).attr('name');
+	jQuery.ajax({
+		url: path,
+		type: "post",
+		async: false,
+		data: {index:index,active:val,visualizable:visualizable},
+		success: function(d) {
+           window.location.reload(); 
+		}
+	});
+}
+
+function page_loading(elem, state) {
+  if (state == 0) {
+	jQuery(elem).parent().find(".loader").show();  
+  }	else {
+	  return false;
+  }
+}
+
+function Change_datepicker(id1,id2) {
+	jQuery("#"+id1+", #"+id2).val('');
+}

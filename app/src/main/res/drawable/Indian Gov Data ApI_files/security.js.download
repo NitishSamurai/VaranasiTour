@@ -1,0 +1,95 @@
+function burstCache() {
+	if (!navigator.onLine) {
+		document.body.innerHTML = "Loading...";
+		window.location = "/";
+	}
+}
+window.onload = burstCache;
+(function($) {
+	if (typeof Drupal.ajax != "undefined") {
+		Drupal.ajax.prototype.error = function(response, uri) {
+			var html;
+			if (typeof WB_Popup != "undefined") {
+				html = drupalErrorMessage(response, uri, true);
+				WB_Popup.show();
+				WB_Popup.setContent(html);
+				WB_Popup.setToCenter();
+				WB_Popup.hideNext();
+				WB_Popup.hidePrev();
+			} else {
+				html = drupalErrorMessage(response, uri);
+				if(typeof console != 'undefined') {
+					console.log(html);
+				}
+			}
+			if (this.progress.element) {
+				$(this.progress.element).remove();
+			}
+			if (this.progress.object) {
+				this.progress.object.stopMonitoring();
+			}
+			$(this.wrapper).show();
+			$(this.element).removeClass("progress-disabled").removeAttr(
+					"disabled");
+			if (this.form) {
+				var settings = response.settings || this.settings
+						|| Drupal.settings;
+				Drupal.attachBehaviors(this.form, settings);
+			}
+		};
+	}
+})(jQuery);
+(function($) {
+	Drupal.behaviors.ogpl_security_suit = {
+		attach : function(context) {
+			$.ajaxSetup({
+				beforeSend : function(jqXHR, settings) {
+					settings.error = function(jqXHR, textStatus, errorThrown) {
+						if (jqXHR.status) {
+							if (typeof WB_Popup != "undefined") {
+								html = drupalErrorMessage(jqXHR, settings.url,
+										true);
+								WB_Popup.show();
+								WB_Popup.setContent(html);
+								WB_Popup.setToCenter();
+								WB_Popup.hideNext();
+								WB_Popup.hidePrev();
+							} else {
+								html = drupalErrorMessage(jqXHR, settings.url);
+								alert(html);
+							}
+						}
+					};
+				}
+			});
+		}
+	};
+})(jQuery);
+function drupalErrorMessage(response, uri, is_html) {
+	if (typeof is_html == "undefined") {
+		is_html = false;
+	}
+	var title;
+	var message;
+	switch (response.status) {
+	case 200:
+	case 404:
+		title = "Request Not Found";
+		message = "Illegal Choice! Requested page could not be found.";
+		break;
+	case 403:
+		title = "Access Denied";
+		message = "You are not authorized. Please contact site Administrator.";
+		break;
+	}
+	if (is_html) {
+		var html = '<div id="web_catalog_content"><div id="web_catalog_title">'
+				+ "<h2>"
+				+ title
+				+ '</h2></div><div id="web_catalog_error" style=" padding: 50px 0; '
+				+ 'text-align:center;">' + message + "</div></div>";
+	} else {
+		var html = "Illegal Choice! Try later";
+	}
+	return html;
+}

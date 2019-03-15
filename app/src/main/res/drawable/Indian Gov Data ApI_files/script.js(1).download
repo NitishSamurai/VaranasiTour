@@ -1,0 +1,141 @@
+jQuery(function() {
+	if (jQuery("#gritter-messages").length > 0) {
+		if (jQuery("#gritter-messages .status").length > 0) {
+			if (jQuery("#gritter-messages .status").children("ul li").length > 0) {
+				$("#gritter-messages .status ul li").each(function() {
+					gritter_notify(jQuery(this).html(), "status");
+				});
+			} else {
+				gritter_notify(jQuery("#gritter-messages .status").html(),
+						"status");
+			}
+		}
+		if (jQuery("#gritter-messages .warning").length > 0) {
+			if (jQuery("#gritter-messages .warning").children("ul li").length > 0) {
+				jQuery("#gritter-messages .warning ul li").each(function() {
+					gritter_notify(jQuery(this).html(), "warning");
+				});
+			} else {
+				gritter_notify(jQuery("#gritter-messages .warning").html(),
+						"warning");
+			}
+		}
+		if (jQuery("#gritter-messages .error").length > 0) {
+			if (jQuery("#gritter-messages .error").children("ul li").length > 0) {
+				jQuery("#gritter-messages .error ul li").each(function() {
+					gritter_notify(jQuery(this).html(), "error");
+				});
+			} else {
+				gritter_notify(jQuery("#gritter-messages .error").html(),
+						"error");
+			}
+		}
+	}
+});
+(function($) {
+	Drupal.behaviors.commonUtility = {
+		attach : function(context) {
+			$(".vertical-tab-button a").click(function() {
+				if ($(this).parent().hasClass("first")) {
+					$(".node-catalog-form #edit-prev").hide();
+					$(".node-catalog-form #edit-next").show();
+					$(".node-catalog-form #edit-submit").hide();
+				} else {
+					if ($(this).parent().hasClass("last")) {
+						$(".node-catalog-form #edit-prev").show();
+						$(".node-catalog-form #edit-next").hide();
+						$(".node-catalog-form #edit-submit").show();
+					} else {
+						$(".node-catalog-form #edit-prev").show();
+						$(".node-catalog-form #edit-next").show();
+						$(".node-catalog-form #edit-submit").hide();
+					}
+				}
+			});
+			$(".node-catalog-form #edit-next")
+					.click(
+							function() {
+								if (typeof Drupal.myClientsideValidation.validators["catalog-node-form"] != "undefined") {
+									if ($("#catalog-node-form").valid()) {
+										cu_catalog_form_next();
+									}
+								}
+								return false;
+							});
+			$(".node-catalog-form #edit-prev")
+					.click(
+							function() {
+								if (typeof Drupal.myClientsideValidation.validators["catalog-node-form"] != "undefined") {
+									cu_catalog_form_prev();
+								}
+								return false;
+							});
+							
+			/* setTimeout(function(){
+			 $(".flag-link-toggle").click(function() { 
+		         window.location.reload();
+		      });		
+			}, 5000); */	
+		}
+	};
+})(jQuery);
+function cu_catalog_form_next() {
+	if (typeof jQuery(".node-catalog-form .vertical-tab-button.selected")
+			.next() != "undefined") {
+		jQuery(".node-catalog-form .vertical-tab-button.selected").next().find(
+				"a").click();
+	}
+}
+function cu_catalog_form_prev() {
+	if (typeof jQuery(".node-catalog-form .vertical-tab-button.selected")
+			.prev() != "undefined") {
+		jQuery(".node-catalog-form .vertical-tab-button.selected").prev().find(
+				"a").click();
+	}
+}
+function gritter_notify(text, type) {
+	var title;
+	var sticky;
+	switch (type) {
+	case "status":
+		title = "Status";
+		sticky = false;
+		image = Drupal.settings.basePath + Drupal.settings.rawrImageFolder
+				+ "status.png";
+		break;
+	case "warning":
+		title = "Alert";
+		sticky = false;
+		image = Drupal.settings.basePath + Drupal.settings.rawrImageFolder
+				+ "warning.png";
+		break;
+	case "error":
+		title = "Error";
+		sticky = true;
+		image = Drupal.settings.basePath + Drupal.settings.rawrImageFolder
+				+ "error.png";
+		break;
+	}
+	jQuery.gritter.add({
+		title : title,
+		text : text,
+		image : image,
+		sticky : sticky,
+		time : ""
+	});
+	jQuery("#gritter-messages").hide();
+}
+
+function SiteSearch(elem) {
+   var id = jQuery("#search-api-page-search-form input[name='id']").val();
+   var vl = jQuery("#search-api-page-search-form input[name='keys_"+id+"']").val().replace('&', '%26');
+   jQuery("#search-api-page-search-form input[name='keys_"+id+"']").val(vl);
+   jQuery("#search-api-page-search-form").submit();
+   return false;
+}
+function _siteSearch(elem) {
+   var vl = jQuery("#edit-text").val().replace('&', '%26');
+   jQuery("#edit-text").val(vl);
+   jQuery("#comutil-search-form").submit();
+   return false;
+}

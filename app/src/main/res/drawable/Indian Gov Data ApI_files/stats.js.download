@@ -1,0 +1,136 @@
+Drupal.behaviors.commonUtilityStats = {
+	time: 30000,
+	intervalVar: null,
+	attach: function (context) {
+		if(!jQuery('#home-header-stats').hasClass('ogpl-processed')) {
+			comutil_update_stats();
+			jQuery('#home-header-stats').addClass('ogpl-processed')
+		}
+	}
+};
+
+function comutil_update_stats() {
+	
+	jQuery.ajax({
+		 url: Drupal.settings.basePath + "comutil/stats",
+		 dataType: "json",
+		 contentType: "text/json",
+		 cache: false,
+		 success: function( data ) {
+			 var html = '';
+			 if (data.domain_id == data.domain_default) {
+				html = '<div class="resources"><a title="Total number of Resources '+data.resource_count+'" href="' + Drupal.settings.basePath + 'catalogs"><span class="container">'
+					+ '<span class="home-stats-count">' + data.resource_count 
+					+ '</span> RESOURCES</span></a></div>'
+					+ '<div class="catalogs"><a title="Total number of Catalogs '+data.catalog_count+'" href="' + Drupal.settings.basePath + 'catalogs"><span class="container">' 
+					+ '<span class="home-stats-count">' 
+					+ data.catalog_count + '</span> CATALOGS</span></a></div>'
+					
+				    + '<div class="department"><a title="Total number of Departments '+data.department_count+'" href="#" class="home-stats-popup-trigger"> <span class="container"><span class="home-stats-popup-container" >' 
+					+ '<span class="home-stats-count">' 
+					+ data.department_count + '</span> DEPARTMENTS</span></a>' 
+					+ '<span class="home-stats-popup-content home-stats-popup-innercontent" style="display:none;">'
+					+ '<a title="Total number of Central Departments '+data.department_count_ministry+'" href="' + Drupal.settings.basePath 
+					+ 'metrics/central"><span class="home-stats-count">(' 
+					+ data.department_count_ministry 
+					+ '</span> Central)</a> and ' 
+					+'<a class="stat-focus" title="Total number of State Departments '+data.department_count_state+'" href="' + Drupal.settings.basePath + 'metrics/state">' 
+					+ '<span class="home-stats-count">('
+					+ data.department_count_state+'</span> State)</a> Departments'
+					+ '</span></span></div>' 
+					
+					+'<div class="viewed"><span class="container"><span class="home-stats-count">' 
+					+ data.views_count + '</span> TIMES VIEWED </span></div>' 
+					+ '<div class="downloadcount"><span class="container"><span class="home-stats-count">'
+					+ data.resource_download_count + '</span> TIMES DOWNLOADED</span></div>' 
+					
+					+ '<div class="cdo reg-users"><a title="Total number of Chief Data Officers '+data.chief_dataofficers_count+'" href="' + Drupal.settings.basePath + 'datacontrollers" class="home-stats-popup-trigger"><span class="container"><span class="home-stats-popup-container" >'
+					+ '<span class="home-stats-count">' 
+					+ data.chief_dataofficers_count + '</span> CHIEF DATA OFFICERS</span></a>' 
+					+ '<span class="home-stats-popup-content  home-stats-popup-innercontent" style="display:none;">'
+					+ '<a title="Total number of Central\'s Chief Data Officers '+data.chief_dataofficers_count_ministry+'" href="' + Drupal.settings.basePath 
+					+ 'datacontrollers"><span class="home-stats-count">(' 
+					+ data.chief_dataofficers_count_ministry
+					+ '</span> Central)</a> and ' 
+					+'<a class="stat-focus" title="Total number of State\'s Chief Data Officers '+data.chief_dataofficers_count_state+'" href="' + Drupal.settings.basePath + 'state-controllers">' 
+					+ '<span class="home-stats-count">('
+					+ data.chief_dataofficers_count_state+'</span> State)</a> CDOs'
+					+ '</span></span></div>'
+					
+					+ '<div class="api-count"><a title="Total number of APIs '+data.api_created_count+'" href="/ogpl_apis"><span class="container">' 
+					+ '<span class="home-stats-count">' + data.api_created_count
+					+ '</span> APIs</span></a></div><div class="vis-count"><a title="Total number of Visualizations '+data.visualization_count+'" href="https://visualize.data.gov.in/all_visualization.php"><span class="container">' 
+					+ '<span class="home-stats-count">' 
+					+ data.visualization_count + '</span> VISUALIZATIONS</span></a></div>';
+			 } else {
+				
+                          var $cat_url = (data.domain_id == 61) ? Drupal.settings.basePath+'catalogsv2' : Drupal.settings.basePath+'catalogs';
+				  
+				  html = '<div class="resources"><a title="Total number of Resources '+data.resource_count+'" href="' + $cat_url + '"><span class="container">'
+					+ '<span class="home-stats-count">' + data.resource_count 
+					+ '</a></span> RESOURCES</span></div>'
+					+ '<div class="catalogs"><a title="Total number of Catalogs '+data.catalog_count+'" href="' + $cat_url + '"><span class="container">' 
+					+ '<span class="home-stats-count">' 
+					+ data.catalog_count + '</a></span> CATALOGS BY</span></div>' 
+					
+				    + '<div class="department">'
+					+ '<span class="home-stats-count">' 
+					+ data.department_count + '</a></span> DEPARTMENTS ARE DOWNLOADED</span>' 
+					+ '</span></div>'  
+					+ '<div class="downloadcount"><span class="container"><span class="home-stats-count">'
+					+ data.resource_download_count + '</span> TIMES</span></div>';
+			 }
+		
+		jQuery('#home-header-stats').html(html);
+		
+		 var search_form_html = 'Search within '+ data.resource_count + ' resources in ' 
+					+ data.catalog_count + ' catalogs ';
+		
+		 jQuery('#views-exposed-form-catalogs-page .views-widget-filter-search_api_views_fulltext label').html(search_form_html);
+		
+		jQuery('.home-stats-popup-trigger').parent().find('.home-stats-popup-content').show();
+		jQuery('.home-stats-popup-trigger').parent().find('.home-stats-popup-content').hide();
+		
+		jQuery('.home-stats-popup-trigger').hover(function() {
+			jQuery(this).addClass('popup-hover');
+			jQuery(this).parent().find('.home-stats-popup-innercontent').show();
+		}, function() {
+			jQuery(this).removeClass('popup-hover');
+			jQuery(this).parent().find('.home-stats-popup-innercontent').hide();
+		});
+		
+		jQuery('.home-stats-popup-innercontent').hover(function() {
+			jQuery(this).show();
+		}, function(){
+			jQuery(this).hide();
+		});
+		
+		jQuery('.home-stats-popup-trigger').click(function() {
+			return false;
+		});
+		
+		//for At a Glance block focus
+		
+		jQuery(".hm-container .home-stats-popup-trigger")
+			.focusin(function(){
+				jQuery( this )
+					.siblings()
+					.css( "display", "block" );
+		});
+		jQuery(".hm-container .stat-focus")
+			.focusout(function(){
+				jQuery(this)
+					.parent()
+					.css("display","none");
+		});
+      }
+	});
+	
+	/*.always(function() {
+		clearInterval(Drupal.behaviors.commonUtilityStats.intervalVar);
+		Drupal.behaviors.commonUtilityStats.intervalVar = setInterval(function() {
+			comutil_update_stats();
+		}, Drupal.behaviors.commonUtilityStats.time);
+	});
+	*/
+}

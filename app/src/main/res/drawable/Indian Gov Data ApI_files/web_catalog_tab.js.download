@@ -1,0 +1,75 @@
+jQuery(function() {
+	jQuery(".web_catalog_ico.qr").click(function() {
+		if (jQuery(this).hasClass("ico-close")) {
+			jQuery(this).removeClass("ico-close");
+			jQuery(this).addClass("ico-open");
+			jQuery(this).parent().find(".web_catalog_qr_wrap").show();
+		} else {
+			jQuery(this).removeClass("ico-open");
+			jQuery(this).addClass("ico-close");
+			jQuery(this).parent().find(".web_catalog_qr_wrap").hide();
+		}
+		return false;
+	});
+});
+(function($) {
+	Drupal.behaviors.webCatalogTab = {
+		attach : function(context) {
+			$(".add_button.resource").click(
+					function() {
+						$(this).parent().parent().find(
+								"#ogpl_catalog_node_form").show();
+						$(this).hide();
+						$(".add_button.hide_resource").show();
+						return false;
+					});
+			$(".add_button.hide_resource").click(
+					function() {
+						$(this).parent().parent().find(
+								"#ogpl_catalog_node_form").hide();
+						$(this).hide();
+						$(".add_button.resource").show();
+						return false;
+					});
+			$("#web_catalog_tabs ul li a").click(function() {
+				var target = $(this).attr("catalog_tab");
+				$("#web_catalog_wrapper .web_catalog_tab_container").hide();
+				$("#web_catalog_tab_content").find(target).show();
+				$("#web_catalog_tabs ul li").removeClass("active");
+				$(this).parent().addClass("active");
+				window.location.hash = $(this).attr("id");
+				$(window).scrollTop($("#content-column").offset().top - 235);
+				return false;
+			});
+			
+			//OGD-jQuery-Fix: Check validate selectors before $(selector) 
+			//TODO: Always check this code before Update
+			var selector_regex =/^[a-z0-9\s.,+\-#]+$/;
+			
+			if (typeof window.location.hash != "undefined"
+					&& window.location.hash != "" && selector_regex.test(window.location.hash)) {
+				if (typeof $(window.location.hash).attr("id") != "undefined") {
+					$("#web_catalog_tabs ul li").removeClass("active");
+					$(window.location.hash).parent().addClass("active");
+					$(window)
+							.scrollTop($("#content-column").offset().top - 235);
+				}
+			}
+			$("#web_catalog_tabs ul li.active a").trigger("click");
+			jQuery(".toggle_button").click(function() {
+				jQuery(".toggle_button").show();
+				jQuery(this).hide();
+				if (typeof jQuery(this).attr("toggletarget") != "undefined") {
+					var target = jQuery(this).attr("toggletarget");
+					if (typeof target != "undefined" && target != "") {
+						jQuery(".toggle_button_content").hide();
+						if (typeof jQuery(target) != "undeinfed") {
+							jQuery(target).show();
+						}
+					}
+				}
+				return false;
+			});
+		}
+	};
+})(jQuery);

@@ -1,0 +1,35 @@
+/**
+ * @file
+ * Asyncronyously load and image that will trgger the statistics collector. 
+ */
+(function ($) {
+	
+  jQuery.ajax({
+	  url:  Drupal.settings.ogdp_stats.statistics.src,
+	  dataType: "json",
+	  cache: false
+	}).done(function(response) {
+		if (typeof console == "object") {
+			console.log("OGDP Statistics has been loaded successfully.");
+		}
+	}).fail(function() {
+		if (typeof console == "object") {
+			console.log("Problem loading OGDP statistics.");
+		}
+	});
+  
+  Drupal.behaviors.ogdp_stats = {
+	attach: function(context) {
+		jQuery(".ogdp-status-view-count ", context).not('.ogpl-processed').addClass('ogpl-processed').each(function(){
+			var nodeID = jQuery(this).attr('nodeID');
+			jQuery.ajax({
+			  url: "/ogdp-stats-get/"+nodeID,
+			  dataType: "json"
+			}).done(function(response) {
+				jQuery('#ogdp-status-view-count-'+response.nid).html(response.hit);
+			});
+		});
+	}
+  };
+})(jQuery);
+

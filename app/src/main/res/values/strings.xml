@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Varanasi Tour</string>
+
+
+    <string name ="temple_category">Temples</string>
+    <string name="hotel_category">Hotels</string>
+    <string name="university_category">Universities</string>
+    <string name="food_category">Foods</string>
+
+</resources>
